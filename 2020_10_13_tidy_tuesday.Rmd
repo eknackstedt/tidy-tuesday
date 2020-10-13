@@ -1,0 +1,77 @@
+---
+title: "Datasaurus Dozen"
+date: 2020-10-12
+output: html_output
+---
+
+# TidyTuesday
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(tidytuesdayR)
+
+```
+
+## Load the weekly Data
+
+```{r Load}
+
+tt <- tt_load("2020-10-13")
+
+datasaurus <- tt$datasaurus 
+
+theme_set(theme_bw())
+
+```
+
+## Analysis plan
+
+We have multiple data sets that are designed to teach the principle that summaries are not the actual data. In this case the data are distributed differently in all cases but undifferentiated when summarized with the mean, standard deviation, and correlation.
+
+The mean is a description of a random variables' center. The standard deviation a description of a random variables' spread. Correlation a measure of the covariation between two random variables. 
+
+Just looking at these statistics without taking the time to look at the data could lead an analyst to infer that data sets were observations from the same underlying machinery. 
+
+For this analysis we will look to explore the similar summaries visually. Then, we will view them using boxplots to see how much an alternate statistical approach can help. We will start with the quick vignette provide. 
+
+## Vignette
+
+```{r}
+ggplot(datasaurus, aes(x=x, y=y, colour=dataset))+
+  geom_point()+
+  theme_void()+
+  theme(legend.position = "none")+
+  facet_wrap(~dataset, ncol=3)
+```
+
+## Mean, standard deviation, and correlation
+
+```{r}
+ggplot(datasaurus, aes(x=x, y = dataset, colour=dataset))+
+  stat_summary(fun.data = "mean_sdl",
+               fun.args = list(mult = 1),
+               show.legend = F) +
+  labs(title = "Mean and standard deviation of x simular across data sets")
+```
+
+```{r}
+ggplot(datasaurus, aes(dataset, y, colour=dataset))+
+  stat_summary(fun.data = "mean_sdl",
+               fun.args = list(mult = 1),
+               show.legend = F) +
+  labs(title = "Mean and standard deviation of y simular across data sets")
+```
+
+```{r}
+
+datasaurus %>% 
+  group_by(dataset) %>% 
+  summarise(correlation = cor(x,y)) %>% 
+  arrange(correlation) %>% 
+  kableExtra::kable()
+```
+
