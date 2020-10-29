@@ -1,0 +1,74 @@
+---
+title: "Great American Beer Festival"
+date: '2020-10-19'
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+pacman::p_load(tidytuesdayR, tidyverse, scales)
+
+theme_set(theme_light())
+```
+
+
+```{r Load}
+
+tt <- tt_load("2020-10-20")
+
+beer_awards <- tt$beer_awards %>% 
+  mutate(medal = factor(medal, levels = c("Gold", "Silver", "Bronze")))
+
+```
+
+```{r Skim}
+beer_awards %>% 
+  skimr::skim()
+```
+
+# Analysis Plan
+
+Each observation is a medal awarded to a beer within a given year. There does not appear to be a unique key, meaning that beers can occur more than once. Some questions to get this analysis started:
+
+> How many medals of each type are awarded? 
+> Is this related to the number of award categories?
+> Are there states or cities more heavily represented? (Number of brewerys, number of medals)
+> Can states be grouped by category of beer?
+
+# EDA
+
+## Mechanics of the contest
+
+```{r}
+beer_awards %>% 
+  count(medal) %>%
+  mutate(n = comma(n,accuracy = 1)) %>% 
+  kableExtra::kable(caption = "Number of Medals Awarded")
+
+beer_awards %>% 
+  count(category, sort = T) %>% 
+  slice_max(order_by = n, n = 20) %>% 
+  mutate(category = fct_reorder(category, n)) %>% 
+  ggplot(aes(n, category, fill = category)) +
+  geom_col(show.legend = F) +
+  labs(title = "Top 20 Most Common Categories")
+```
+
+
+```{r}
+beer_awards %>% 
+  group_by(state) %>% 
+  summarise(n_gold = sum(medal == "Gold"),
+            n_medal = n()) %>% 
+  ggplot(aes(n_medal, n_gold, label = state)) +
+  geom_text(check_overlap = T) +
+  geom_smooth(method = "lm")+
+  scale_y_log10() +
+  scale_x_log10() +
+  labs(title = "California and Colorado lead the way in medals, Gold or otherwise")
+```
+
+
